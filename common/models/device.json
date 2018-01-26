@@ -1,0 +1,29 @@
+{
+    "name": "device",
+    "plural": "devices",
+    "base": "PersistedModel",
+    "idInjection": true,
+    "options": {
+        "validateUpsert": true
+    },
+    "properties": {
+        "deviceId": {
+            "type": "string",
+            "required": true
+        },
+        "nickname": {
+            "type": "string",
+            "required": true
+        },
+        "games": {
+            "type": "hasMany",
+            "model": "game",
+            "foreignKey": "deviceId",
+            "through": "device-game"
+        }
+    },
+    "validations": [],
+    "relations": {},
+    "acls": [],
+    "methods": {}
+}

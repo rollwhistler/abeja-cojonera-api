@@ -1,0 +1,22 @@
+{
+    "name": "device-game",
+    "base": "PersistedModel",
+    "idInjection": true,
+    "options": {
+        "validateUpsert": true
+    },
+    "properties": {},
+    "validations": [],
+    "relations": {
+        "device": {
+            "type": "belongsTo",
+            "model": "device"
+        },
+        "game": {
+            "type": "belongsTo",
+            "model": "game"
+        }
+    },
+    "acls": [],
+    "methods": {}
+}

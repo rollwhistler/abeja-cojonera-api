@@ -1,0 +1,9 @@
+{
+  "db": {
+    "database": "abejacojonera",
+    "password": "",
+    "name": "db",
+    "connector": "mysql",
+    "user": "root"
+  }
+}

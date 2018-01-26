@@ -1,0 +1,41 @@
+{
+    "name": "flower",
+    "plural": "flowers",
+    "base": "PersistedModel",
+    "idInjection": true,
+    "options": {
+        "validateUpsert": true
+    },
+    "properties": {
+        "type": {
+            "type": "number",
+            "required": true,
+            "default": 0
+        },
+        "pollinable": {
+            "type": "boolean",
+            "default": true
+        },
+        "pollinated": {
+            "type": "boolean",
+            "default": false
+        },
+        "x": {
+            "type": "number",
+            "default": 0
+        },
+        "y": {
+            "type": "number",
+            "default": 0
+        }
+    },
+    "validations": [],
+    "relations": {
+        "game": {
+            "type": "belongsTo",
+            "model": "game"
+        }
+    },
+    "acls": [],
+    "methods": {}
+}

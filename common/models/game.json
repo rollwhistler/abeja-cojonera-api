@@ -1,0 +1,41 @@
+{
+    "name": "game",
+    "plural": "games",
+    "base": "PersistedModel",
+    "idInjection": true,
+    "options": {
+        "validateUpsert": true
+    },
+    "properties": {
+        "name": {
+            "type": "string"
+        },
+        "status": {
+            "type": "string",
+            "default": "0"
+        },
+        "max_x": {
+            "type": "number",
+            "default": 100
+        },
+        "max_y": {
+            "type": "number",
+            "default": 100
+        }
+    },
+    "validations": [],
+    "relations": {
+        "flowers": {
+            "type": "hasMany",
+            "model": "flower"
+        },
+        "devices": {
+            "type": "hasMany",
+            "model": "device",
+            "foreignKey": "gameId",
+            "through": "device-game"
+        }
+    },
+    "acls": [],
+    "methods": {}
+}

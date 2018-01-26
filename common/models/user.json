@@ -1,0 +1,138 @@
+{
+  "name": "user",
+  "base": "User",
+  "strict": true,
+  "idInjection": true,
+  "options": {
+    "validateUpsert": true
+  },
+  "mixins": {
+    "Timestamps": true
+  },
+  "scope": {
+    "include": [
+      "roles",
+      "comercial",
+      {
+        "cliente": [
+          "direcciones",
+          {
+            "client_seasons": "season"
+          }
+        ]
+      }
+    ]
+  },
+  "properties": {
+    "name": {
+      "type": "string",
+      "index": true
+    },
+    "lastname": {
+      "type": "string",
+      "index": true
+    },
+    "newsletter": {
+      "type": "boolean"
+    },
+    "type": {
+      "type": "string"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "lastLogin": {
+      "type": "date"
+    },
+    "lastAccess": {
+      "type": "date"
+    },
+    "image": {
+      "type": "string"
+    },
+    "active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "validations": [],
+  "relations": {
+    "roles": {
+      "type": "hasMany",
+      "model": "roleMapping",
+      "foreignKey": "principalId"
+    },
+    "comercial": {
+      "type": "hasMany",
+      "model": "Comercial",
+      "foreignKey": "user_id"
+    },
+    "cliente": {
+      "type": "hasMany",
+      "model": "Cliente",
+      "foreignKey": "user_id"
+    }
+  },
+  "acls": [
+    {
+      "accessType": "*",
+      "principalType": "ROLE",
+      "principalId": "$everyone",
+      "permission": "ALLOW"
+    },
+    {
+      "accessType": "*",
+      "principalType": "ROLE",
+      "principalId": "admin",
+      "permission": "ALLOW"
+    },
+    {
+      "accessType": "READ",
+      "principalType": "ROLE",
+      "principalId": "$authenticated",
+      "permission": "ALLOW"
+    },
+    {
+      "accessType": "*",
+      "principalType": "ROLE",
+      "principalId": "$owner",
+      "permission": "ALLOW"
+    },
+    {
+      "accessType": "EXECUTE",
+      "principalType": "ROLE",
+      "principalId": "$unauthenticated",
+      "permission": "ALLOW",
+      "property": "resetPassword"
+    },
+    {
+      "accessType": "EXECUTE",
+      "principalType": "ROLE",
+      "principalId": "$unauthenticated",
+      "permission": "ALLOW",
+      "property": "changePassword"
+    },
+    {
+      "accessType": "EXECUTE",
+      "principalType": "ROLE",
+      "principalId": "$authenticated",
+      "permission": "ALLOW",
+      "property": "refreshAccessToken"
+    },
+    {
+      "accessType": "EXECUTE",
+      "principalType": "ROLE",
+      "principalId": "$everyone",
+      "permission": "ALLOW",
+      "property": "sendResetLink"
+    },
+    {
+      "accessType": "EXECUTE",
+      "principalType": "ROLE",
+      "principalId": "$authenticated",
+      "permission": "ALLOW",
+      "property": "customResetPassword"
+    }
+  ],
+  "methods": {}
+}
