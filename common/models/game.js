@@ -4,14 +4,21 @@ module.exports = function(Game) {
 
     Game.spawnInterval = null;
     Game.currentGame = null;
-    Game.flowers = [];
 
     Game.startSpawner = function() {
         console.log("starting spawner");
-        Game.flowers = [];
+        var Flower = Game.app.models.Flower;
+        var filter = {
+            where: {
+                gameId: Game.currentGame.__data.id
+            }
+        }
+
+        Flower.destroyAll(filter);
+
         Game.spawnInterval = setInterval(function() {
             Game.spawnFlower();
-        }, 500);
+        }, 1000);
     }
 
     Game.spawnFlower = function() {
@@ -21,14 +28,19 @@ module.exports = function(Game) {
         var flower = {
             pollinated: false,
             deviceId: null,
+            gameId: Game.currentGame.__data.id,
             type: type,
             x: x,
-            y: y,
-            index: Game.flowers.length
+            y: y
         };
-        Game.flowers.push(flower);
-        console.log("spawning flower");
-        app.io.emit('spawn', flower);
+
+        var Flower = Game.app.models.Flower;
+        Flower.create(flower, function(err, fl) {
+            if (err) return console.log(err.message);
+            console.log("spawning flower");
+            Game.app.io.emit('spawn', flower);
+        });
+
     };
 
     Game.stopSpawner = function() {
@@ -46,13 +58,13 @@ module.exports = function(Game) {
             try {
                 if (games && games.length > 0) {
                     Game.currentGame = games[0];
-                    return cb(null, games[0].__data.id);
+                    return cb(null, games[0]);
                 }
 
                 Game.create({ name: "test game", status: 0, max_x: 500, max_y: 500 }, function(err, game) {
                     if (err) return cb(err);
                     Game.currentGame = game;
-                    return cb(null, game.__data.id);
+                    return cb(null, game);
                 });
             } catch (e) {
                 cb(e);
@@ -64,14 +76,14 @@ module.exports = function(Game) {
         'join', {
             accepts: [],
             description: "Ask Game Info to Join In",
-            returns: { arg: 'gameId', type: 'number' },
+            returns: { arg: 'game', type: 'object' },
             http: { arg: 'post', path: '/join' }
         }
     );
 
     Game.observe('after save', function(ctx, next) {
         if (ctx.isNewInstance) {
-            Game.startSpawner();
+            setTimeout(Game.startSpawner, 100);
         } else {
             if (ctx.instance) {
                 var model = ctx.instance;
@@ -84,11 +96,4 @@ module.exports = function(Game) {
         }
         next();
     });
-
-    Game.afterInitialized = function() {
-        app.io.on("join", function() {
-            console.log("someone joined!");
-            Game.join(function() {});
-        });
-    };
 };
