@@ -28,13 +28,13 @@ boot(app, __dirname, function(err) {
         app.io = require('socket.io')(app.get('socket_port'));
         app.start();
 
-        setTimeout(function() {
+        /*setTimeout(function() {
             console.log("app initialized!");
             app.io.on("join", function() {
                 console.log("someone joined!");
                 app.models.Game.join(function() {});
             });
-        }, 500);
+        }, 500);*/
 
     }
 

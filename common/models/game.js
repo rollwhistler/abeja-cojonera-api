@@ -47,7 +47,12 @@ module.exports = function(Game) {
         clearInterval(Game.spawnInterval);
     }
 
-    Game.join = function(cb) {
+    Game.join = function(deviceId, cb) {
+        console.log("someone joined!");
+        Game.app.models.Device.generateDevice(deviceId);
+
+
+        if (Game.currentGame) return cb(null, Game.currentGame);
         var filter = {
             where: {
                 status: 0
@@ -74,7 +79,7 @@ module.exports = function(Game) {
 
     Game.remoteMethod(
         'join', {
-            accepts: [],
+            accepts: [{ arg: 'deviceId', type: 'string', required: true }],
             description: "Ask Game Info to Join In",
             returns: { arg: 'game', type: 'object' },
             http: { arg: 'post', path: '/join' }
