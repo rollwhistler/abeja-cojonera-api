@@ -147,17 +147,19 @@ module.exports = function(Game) {
         var Device = Game.app.models.Device;
         //Is it possible the we count multiple collisions as good, due to latency on this operation.
         //fuck it, good enough for this weekend
-        Flower.findOne({ id: flowerId }, function(err, flower) {
-            if (err) return cb(err);
+        Flower.find({ where: { id: flowerId } }, function(err, flower) {
+            if (err || !flower || flower.length == 0) return cb(err);
+            flower = flower[0];
             if (flower.__data.pollinated) return cb(new Error("Flower was already pollinated"));
             flower.__data.pollinated = true;
             flower.__data.deviceId = deviceId;
-            flower.save();
+            flower.updateAttributes({ "pollinated": true, "deviceId": deviceId });
 
-            Device.findOne({ id: deviceId }, function(err, device) {
-                if (err) return cb(err);
+            Device.find({ where: { id: deviceId } }, function(err, device) {
+                if (err || !device || device.length == 0) return cb(err);
+                device = device[0];
                 device.__data.points = device.__data.points + 1;
-                device.save();
+                device.updateAttribute("points", device.__data.points);
                 cb(null, device);
                 Game.app.io.emit('points', device.__data);
             });
