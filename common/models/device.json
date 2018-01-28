@@ -13,8 +13,16 @@
         },
         "nickname": {
             "type": "string",
-            "required": true
+            "required": false
         },
+        "points": {
+            "type": "number",
+            "required": false,
+            "default": 0
+        }
+    },
+    "validations": [],
+    "relations": {
         "games": {
             "type": "hasMany",
             "model": "game",
@@ -22,8 +30,6 @@
             "through": "device-game"
         }
     },
-    "validations": [],
-    "relations": {},
     "acls": [],
     "methods": {}
 }

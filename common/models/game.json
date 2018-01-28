@@ -6,6 +6,11 @@
     "options": {
         "validateUpsert": true
     },
+    "scope": {
+        "include": [
+            "flowers", "devices"
+        ]
+    },
     "properties": {
         "name": {
             "type": "string"

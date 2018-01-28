@@ -4,6 +4,7 @@ module.exports = function(Game) {
 
     Game.spawnInterval = null;
     Game.currentGame = null;
+    Game.numFlowers = 0;
 
     Game.startSpawner = function() {
         console.log("starting spawner");
@@ -15,6 +16,7 @@ module.exports = function(Game) {
         }
 
         Flower.destroyAll(filter);
+        Game.numFlowers = 0;
 
         Game.spawnInterval = setInterval(function() {
             Game.spawnFlower();
@@ -22,7 +24,8 @@ module.exports = function(Game) {
     }
 
     Game.spawnFlower = function() {
-        var type = Math.floor(Math.random() * 3);
+        var type = Math.floor(Math.random() * 5);
+        if (type > 1) type = 1;
         var x = Math.floor(Math.random() * 501);
         var y = Math.floor(Math.random() * 501);
         var flower = {
@@ -38,51 +41,138 @@ module.exports = function(Game) {
         Flower.create(flower, function(err, fl) {
             if (err) return console.log(err.message);
             console.log("spawning flower");
-            Game.app.io.emit('spawn', flower);
+            Game.app.io.emit('spawn', fl.__data);
+            Game.numFlowers++;
+            if (Game.numFlowers > 200) clearInterval(Game.spawnInterval);
         });
 
     };
 
+    Game.generateDevice = function(deviceId, cb) {
+        var filter = {
+            where: {
+                deviceId: deviceId
+            }
+        };
+
+        var Device = Game.app.models.Device;
+
+        Device.findOne(filter, function(err, device) {
+            if (err) return cb(err);
+            if (!device || device.length == 0) {
+                device = {
+                        deviceId: deviceId,
+                        r: Math.floor(Math.random() * 256),
+                        g: Math.floor(Math.random() * 256),
+                        b: Math.floor(Math.random() * 256)
+                    }
+                    //3a185434a0ef325e875c9fe07a5cadbeb4c2686e
+                Device.create(device, function(err, device) {
+                    if (err) return cb(err);
+                    console.log("New device created");
+                    cb(null, device);
+                    Game.app.io.emit('newdevice', device.__data);
+                });
+            } else {
+                console.log("Existing Device");
+                cb(null, device);
+                Game.app.io.emit('newdevice', device.__data);
+            }
+        })
+    }
     Game.stopSpawner = function() {
         clearInterval(Game.spawnInterval);
     }
 
     Game.join = function(deviceId, cb) {
         console.log("someone joined!");
-        Game.app.models.Device.generateDevice(deviceId);
 
+        Game.generateDevice(deviceId, function(err, device) {
+            if (err) cb(err);
+            if (Game.currentGame) return Game.joinCB(cb, Game.currentGame, device);
+            var filter = {
+                where: {
+                    status: 0
+                },
+                include: ["flowers", "devices"]
+            };
+            Game.find(filter, function(err, games) {
+                if (err) return cb(err);
+                try {
+                    if (games && games.length > 0) {
+                        Game.currentGame = games[0];
+                        return Game.joinCB(cb, Game.currentGame, device);
+                    }
 
-        if (Game.currentGame) return cb(null, Game.currentGame);
-        var filter = {
-            where: {
-                status: 0
-            }
-        };
-        Game.find(filter, function(err, games) {
-            if (err) return cb(err);
-            try {
-                if (games && games.length > 0) {
-                    Game.currentGame = games[0];
-                    return cb(null, games[0]);
+                    Game.create({ name: "test game", status: 0, max_x: 500, max_y: 500 }, function(err, game) {
+                        if (err) return cb(err);
+                        Game.currentGame = game;
+                        return Game.joinCB(cb, Game.currentGame, device);
+                    });
+                } catch (e) {
+                    cb(e);
                 }
-
-                Game.create({ name: "test game", status: 0, max_x: 500, max_y: 500 }, function(err, game) {
-                    if (err) return cb(err);
-                    Game.currentGame = game;
-                    return cb(null, game);
-                });
-            } catch (e) {
-                cb(e);
-            }
+            });
         });
     };
+
+    Game.joinCB = function(cb, game, device) {
+        return cb(null, {
+            id: device.id,
+            points: device.points,
+            deviceId: device.deviceId,
+            r: device.r,
+            g: device.g,
+            b: device.b,
+            gameId: game.id,
+            status: game.status,
+            name: game.name,
+            max_x: game.max_x,
+            max_y: game.max_y
+        })
+    }
 
     Game.remoteMethod(
         'join', {
             accepts: [{ arg: 'deviceId', type: 'string', required: true }],
             description: "Ask Game Info to Join In",
-            returns: { arg: 'game', type: 'object' },
+            returns: { root: true, type: 'object' },
             http: { arg: 'post', path: '/join' }
+        }
+    );
+
+    Game.collision = function(deviceId, flowerId, cb) {
+        console.log("someone collided!");
+        var Flower = Game.app.models.Flower;
+        var Device = Game.app.models.Device;
+        //Is it possible the we count multiple collisions as good, due to latency on this operation.
+        //fuck it, good enough for this weekend
+        Flower.findOne({ id: flowerId }, function(err, flower) {
+            if (err) return cb(err);
+            if (flower.__data.pollinated) return cb(new Error("Flower was already pollinated"));
+            flower.__data.pollinated = true;
+            flower.__data.deviceId = deviceId;
+            flower.save();
+
+            Device.findOne({ id: deviceId }, function(err, device) {
+                if (err) return cb(err);
+                device.__data.points = device.__data.points + 1;
+                device.save();
+                cb(null, device);
+                Game.app.io.emit('points', device.__data);
+            });
+        });
+    };
+
+    Game.remoteMethod(
+        'collision', {
+            accepts: [
+                { arg: 'deviceId', type: 'number', required: true },
+                { arg: 'flowerId', type: 'number', required: true }
+            ],
+            description: " collision",
+            returns: { arg: 'device', type: 'object' },
+            http: { arg: 'post', path: '/collision' }
         }
     );
 
