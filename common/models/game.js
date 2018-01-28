@@ -162,6 +162,7 @@ module.exports = function(Game) {
                 device.updateAttribute("points", device.__data.points);
                 cb(null, device);
                 Game.app.io.emit('points', device.__data);
+                Game.app.io.emit('paint', { "flowerId": flower.__data.id, "r": device.__data.r, "g": device.__data.g, "b": device.__data.b });
             });
         });
     };
@@ -175,6 +176,30 @@ module.exports = function(Game) {
             description: " collision",
             returns: { arg: 'device', type: 'object' },
             http: { arg: 'post', path: '/collision' }
+        }
+    );
+
+    Game.died = function(deviceId, cb) {
+        console.log("someone died! " + deviceId);
+        var Device = Game.app.models.Device;
+        Device.find({ where: { id: deviceId } }, function(err, device) {
+            if (err || !device || device.length == 0) return cb(err);
+            device = device[0];
+            device.__data.points = 0;
+            device.updateAttribute("points", device.__data.points);
+            cb(null, device);
+            Game.app.io.emit('points', device.__data);
+        });
+    };
+
+    Game.remoteMethod(
+        'died', {
+            accepts: [
+                { arg: 'deviceId', type: 'number', required: true }
+            ],
+            description: " someone died",
+            returns: { arg: 'device', type: 'object' },
+            http: { arg: 'post', path: '/died' }
         }
     );
 
