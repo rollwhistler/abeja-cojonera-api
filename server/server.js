@@ -26,6 +26,8 @@ boot(app, __dirname, function(err) {
     // start the server if `$ node server.js`
     if (require.main === module) {
         app.io = require('socket.io')(app.get('socket_port'));
+        app.io.set('transports', ['xhr-polling']);
+        app.io.set('polling duration', 10);
         app.start();
 
         /*setTimeout(function() {
