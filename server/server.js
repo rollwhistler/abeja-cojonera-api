@@ -25,11 +25,11 @@ boot(app, __dirname, function(err) {
 
     // start the server if `$ node server.js`
     if (require.main === module) {
-        app.io = require('socket.io')(app.get('socket_port'));
-        app.io.set('transports', ['xhr-polling']);
-        app.io.set('polling duration', 10);
-        app.start();
-
+        app.io = require('socket.io')(app.start());
+        app.io.configure(function() {
+            app.io.set('transports', ['xhr-polling']);
+            app.io.set('polling duration', 10);
+        });
         /*setTimeout(function() {
             console.log("app initialized!");
             app.io.on("join", function() {

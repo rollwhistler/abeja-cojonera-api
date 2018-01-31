@@ -19,5 +19,5 @@
         },
         "cors": false
     },
-    "socket_port": 3000
+    "socket_port": 3002
 }
